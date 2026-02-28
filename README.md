@@ -50,9 +50,9 @@ void setup() {
 ¡Las contribuciones son lo que hacen a la comunidad de código abierto un lugar increíble!
 
 1. Haz un Fork del proyecto.
-2. Crea tu rama de función: codigoAqui git checkout -b feature/NuevaMejora codigoAqui
-3. Haz un Commit de tus cambios: codigoAqui git commit -m 'Añadir NuevaMejora' codigoAqui
-4. Haz un Push a la rama: codigoAqui git push origin feature/NuevaMejora codigoAqui
+2. Crea tu rama de función: ``` git checkout -b feature/NuevaMejora ```
+3. Haz un Commit de tus cambios: ``` git commit -m 'Añadir NuevaMejora' ```
+4. Haz un Push a la rama: ``` git push origin feature/NuevaMejora ```
 5. Abre un Pull Request.
 
 ---
