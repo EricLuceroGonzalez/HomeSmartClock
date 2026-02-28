@@ -18,7 +18,7 @@ import textwrap
 # --- 1. LECTURA DE EFEMÉRIDES (JSON) ---
 def obtener_efemeride():
     hoy = datetime.now().strftime("%m-%d")
-    ruta_json = "fechas.json"
+    ruta_json = "dates.json"
     if os.path.exists(ruta_json):
         try:
             with open(ruta_json, "r", encoding="utf-8") as archivo:
@@ -49,6 +49,7 @@ except:
     sensor_luz = None
 
 # --- 3. CARGA DE FUENTES ---
+# Se han instalado previamente con: sudo apt-get install fonts-dejavu-core -y
 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 icon_path = "fa-solid-900.ttf" 
 
@@ -90,7 +91,7 @@ def actualizar_internet():
     while True:
         api_temp_ext, api_pronostico = apis.get_madrid_weather()
         api_fact_lineas = apis.get_fun_fact()
-        time.sleep(300)
+        time.sleep(120)
 
 threading.Thread(target=actualizar_internet, daemon=True).start()
 
@@ -171,7 +172,7 @@ while True:
     draw.line((0, 16, 128, 16), fill=255)
 
     if estado_actual == 0:
-        draw.text((20 + offset_x, 0 + offset_y), "HORA MADRID", font=font_titulo, fill=255)
+        draw.text((20 + offset_x, 0 + offset_y), "MADRID", font=font_titulo, fill=255)
         draw.text((2 + offset_x, 18 + offset_y), datetime.now(ZoneInfo("Europe/Madrid")).strftime("%H:%M"), font=font_hora, fill=255)
 
     elif estado_actual == 1:
@@ -192,7 +193,7 @@ while True:
             except: pass
 
     elif estado_actual == 3:
-        draw.text((18 + offset_x, 0 + offset_y), "HORA PANAMA", font=font_titulo, fill=255)
+        draw.text((18 + offset_x, 0 + offset_y), "PANAMA", font=font_titulo, fill=255)
         draw.text((2 + offset_x, 18 + offset_y), datetime.now(ZoneInfo("America/Panama")).strftime("%H:%M"), font=font_hora, fill=255)
 
     elif estado_actual == 4:
@@ -212,7 +213,7 @@ while True:
                 y_text += 14
 
     elif estado_actual == 6:
-        draw.text((20 + offset_x, 0 + offset_y), "DATO CURIOSO", font=font_titulo, fill=255)
+        draw.text((20 + offset_x, 0 + offset_y), "Fun fact!", font=font_titulo, fill=255)
         
         # --- LÓGICA DE PAGINACIÓN ---
         segundos_transcurridos = tiempo_actual - ultimo_cambio
