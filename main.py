@@ -196,7 +196,7 @@ while True:
         draw.text((30 + offset_x, 46 + offset_y), ultima_hum_int, font=font_titulo, fill=255)
 
     elif estado_actual == 2:
-        draw.text((10 + offset_x, 0 + offset_y), "ESPECTRO LUZ", font=font_titulo, fill=255)
+        draw.text((5 + offset_x, 0 + offset_y), f"ESPECTRO LUZ {sensor_luz.channel_555nm + sensor_luz.channel_590nm}", font=font_titulo, fill=255)
         if sensor_luz:
             try:
                 canales = [sensor_luz.channel_415nm, sensor_luz.channel_445nm, sensor_luz.channel_480nm, sensor_luz.channel_515nm, sensor_luz.channel_555nm, sensor_luz.channel_590nm, sensor_luz.channel_630nm, sensor_luz.channel_680nm]
@@ -216,7 +216,7 @@ while True:
         draw.text((5 + offset_x, 48 + offset_y), api_pronostico, font=font_titulo, fill=255)
 
     elif estado_actual == 5:
-        draw.text((20 + offset_x, 0 + offset_y), "UN DIA COMO HOY", font=font_titulo, fill=255)
+        draw.text((20 + offset_x, 0 + offset_y), "Efemérides", font=font_titulo, fill=255)
         lineas_efemeride = obtener_efemeride()
         if lineas_efemeride:
             y_text = 20
