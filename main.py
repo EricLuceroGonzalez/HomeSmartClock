@@ -10,28 +10,11 @@ import adafruit_dht
 import adafruit_as7341
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import os
 import apis
-import json
-import textwrap
+import subprocess
+from getDate import obtener_efemeride
 
-# --- 1. LECTURA DE EFEMÉRIDES (JSON) ---
-def obtener_efemeride():
-    hoy = datetime.now().strftime("%m-%d")
-    ruta_json = "dates.json"
-    if os.path.exists(ruta_json):
-        try:
-            with open(ruta_json, "r", encoding="utf-8") as archivo:
-                datos = json.load(archivo)
-                texto = datos.get(hoy, None)
-                if texto:
-                    # Envolvemos el texto para que quepa en la pantalla (máximo 20 caracteres por línea)
-                    return textwrap.wrap(texto, width=20)
-        except Exception:
-            pass
-    return None
-
-# --- 2. INICIALIZAR HARDWARE ---
+# --- INICIALIZAR HARDWARE ---
 spi = busio.SPI(board.SCK, MOSI=board.MOSI)
 cs_pin = digitalio.DigitalInOut(board.D5) 
 dc_pin = digitalio.DigitalInOut(board.D23)
@@ -48,7 +31,7 @@ try:
 except:
     sensor_luz = None
 
-# --- 3. CARGA DE FUENTES ---
+# --- CARGA DE FUENTES ---
 # Se han instalado previamente con: sudo apt-get install fonts-dejavu-core -y
 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 icon_path = "fa-solid-900.ttf" 
@@ -65,7 +48,7 @@ except:
 image = Image.new("1", (oled.width, oled.height))
 draw = ImageDraw.Draw(image)
 
-# --- 4. VARIABLES GLOBALES ---
+# --- VARIABLES GLOBALES ---
 ultima_temp_int = "--"
 ultima_hum_int = "--"
 ultimo_check_dht = 0
@@ -73,6 +56,10 @@ ultimo_check_dht = 0
 api_temp_ext = "--"
 api_pronostico = "Cargando..."
 api_fact_lineas = ["Buscando", "datos..."]
+
+# --- Datos de estadísticas internas del Raspberry Pi ---
+stats_rpi = ["CPU: --", "RAM: --", "SD: --", "Tmp: --"]
+ultimo_check_sys = 0
 
 # Control de Carrusel
 estado_actual = 0  
@@ -85,7 +72,7 @@ ultimo_shift = time.time()
 oscuridad_consecutiva = 0
 UMBRAL_OSCURIDAD = 80 
 
-# --- 5. HILO DE INTERNET ---
+# --- HILO DE INTERNET ---
 def actualizar_internet():
     global api_temp_ext, api_pronostico, api_fact_lineas
     while True:
@@ -95,7 +82,7 @@ def actualizar_internet():
 
 threading.Thread(target=actualizar_internet, daemon=True).start()
 
-# --- 6. BUCLE PRINCIPAL ---
+# --- BUCLE PRINCIPAL ---
 print("Smart Clock iniciado. Presiona Ctrl+C para salir.")
 
 while True:
@@ -137,6 +124,31 @@ while True:
         except: pass  
         ultimo_check_dht = tiempo_actual
 
+    # C.2 LECTURA DE ESTADÍSTICAS DEL SISTEMA (Cada 5 segundos)
+    if (tiempo_actual - ultimo_check_sys) > 5.0:
+        try:
+            # CPU Load (Carga media)
+            cmd_cpu = "cat /proc/loadavg | awk '{print $1}'"
+            cpu = subprocess.check_output(cmd_cpu, shell=True).decode("utf-8").strip()
+            
+            # RAM Libre vs Usada
+            cmd_mem = "free -m | awk 'NR==2{printf \"%s/%sMB\", $3,$2}'"
+            mem = subprocess.check_output(cmd_mem, shell=True).decode("utf-8").strip()
+            
+            # Espacio en Disco (Tarjeta SD)
+            cmd_disk = "df -h | awk '$NF==\"/\"{printf \"%s/%s\", $3,$2}'"
+            disk = subprocess.check_output(cmd_disk, shell=True).decode("utf-8").strip()
+            
+            # Temperatura del procesador
+            cmd_temp = "cat /sys/class/thermal/thermal_zone0/temp"
+            temp_raw = subprocess.check_output(cmd_temp, shell=True).decode("utf-8").strip()
+            temp_c = float(temp_raw) / 1000.0
+            
+            stats_rpi = [f"CPU: {cpu}", f"RAM: {mem}", f"SD:  {disk}", f"Tmp: {temp_c:.1f}C"]
+        except Exception:
+            pass # Si algo falla, mantiene los datos anteriores
+        ultimo_check_sys = tiempo_actual
+
     # D. LÓGICA DEL CARRUSEL E INTELIGENCIA DE ESTADOS
     if (tiempo_actual - ultimo_cambio) > duracion_actual:
         estado_actual += 1
@@ -147,6 +159,7 @@ while True:
         elif estado_actual == 2: duracion_actual = 6  # Espectro
         elif estado_actual == 3: duracion_actual = 10 # Panama
         elif estado_actual == 4: duracion_actual = 6  # Clima Ext
+        elif estado_actual == 7: duracion_actual = 6
         
         elif estado_actual == 5: # Efemérides
             efemeride_hoy = obtener_efemeride()
@@ -161,7 +174,7 @@ while True:
             paginas = (len(api_fact_lineas) // 3) + 1
             duracion_actual = paginas * 4 # 4 segundos por página
             
-        if estado_actual > 6:
+        if estado_actual > 7:
             estado_actual = 0
             duracion_actual = 10
             
@@ -217,7 +230,7 @@ while True:
         
         # --- LÓGICA DE PAGINACIÓN ---
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 4) # Cambia de página cada 4s
+        pagina_actual = int(segundos_transcurridos // 5) # Cambia de página cada 5s
         
         inicio = pagina_actual * 3
         fin = inicio + 3
@@ -227,6 +240,15 @@ while True:
         for linea in api_fact_lineas[inicio:fin]:
             draw.text((5 + offset_x, y_text + offset_y), linea, font=font_texto, fill=255)
             y_text += 14
+            
+    elif estado_actual == 7:
+        draw.text((20 + offset_x, 0 + offset_y), "SISTEMA RPI", font=font_titulo, fill=255)
+        
+        # Imprimimos las 4 líneas de estadísticas apiladas (usando la fuente pequeña)
+        y_pos = 18
+        for stat in stats_rpi:
+            draw.text((5 + offset_x, y_pos + offset_y), stat, font=font_texto, fill=255)
+            y_pos += 11 # Espaciado perfecto para 4 líneas en la pantalla
 
     oled.image(image)
     oled.show()
