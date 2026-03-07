@@ -1,0 +1,7 @@
+Adafruit-Blinka
+adafruit-circuitpython-ssd1306
+adafruit-circuitpython-dht
+adafruit-circuitpython-as7341
+Pillow
+requests
+python-dotenv
