@@ -12,6 +12,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import apis
 import subprocess
+import EMT_API
 from getDate import obtener_efemeride
 
 # --- INICIALIZAR HARDWARE ---
@@ -59,6 +60,7 @@ ultimo_check_dht = 0
 api_temp_ext = "--"
 api_pronostico = "Cargando..."
 api_fact_lineas = ["Buscando", "datos..."]
+api_buses = "Buses EMT"
 
 # --- Datos de estadísticas internas del Raspberry Pi ---
 stats_rpi = ["CPU: --", "RAM: --", "SD: --", "Tmp: --"]
@@ -73,16 +75,24 @@ duracion_actual = 10  # Tiempo dinámico de la diapositiva actual
 offset_x, offset_y = 0, 0
 ultimo_shift = time.time()
 oscuridad_consecutiva = 0
-UMBRAL_OSCURIDAD = 8
+UMBRAL_OSCURIDAD = 50
 
 
 # --- HILO DE INTERNET ---
 def actualizar_internet():
-    global api_temp_ext, api_pronostico, api_fact_lineas
+    global api_temp_ext, api_pronostico, api_fact_lineas, api_buses
+    ciclo = 0
     while True:
-        api_temp_ext, api_pronostico = apis.get_madrid_weather()
-        api_fact_lineas = apis.get_fun_fact()
-        time.sleep(120)
+        try:
+            api_buses = EMT_API.get_emt_bus("5036")
+            if ciclo % 5 == 0:
+                api_temp_ext, api_pronostico = apis.get_madrid_weather()
+                api_fact_lineas = apis.get_fun_fact()
+            ciclo += 1
+        except Exception as e:
+            print(f"Error en hilo de internet: {e}")
+            pass
+        time.sleep(60)
 
 
 threading.Thread(target=actualizar_internet, daemon=True).start()
@@ -178,9 +188,6 @@ while True:
             duracion_actual = 10  # Panama
         elif estado_actual == 4:
             duracion_actual = 12  # Clima Ext
-        elif estado_actual == 7:
-            duracion_actual = 6
-
         elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
@@ -193,8 +200,12 @@ while True:
             # Calculamos cuántas páginas de 3 líneas necesitamos
             paginas = (len(api_fact_lineas) // 3) + 1
             duracion_actual = paginas * 5  # 4 segundos por página
+        elif estado_actual == 7:
+            duracion_actual = 6
+        elif estado_actual == 8:  # Buses EMT
+            duracion_actual = 8
 
-        if estado_actual > 7:
+        if estado_actual > 8:
             estado_actual = 0
             duracion_actual = 10
 
@@ -257,7 +268,7 @@ while True:
     elif estado_actual == 3:
         draw.text((18 + offset_x, 0 + offset_y), "PANAMA", font=font_titulo, fill=255)
         draw.text(
-            (2 + offset_x, 18 + offset_y),
+            (1 + offset_x, 18 + offset_y),
             datetime.now(ZoneInfo("America/Panama")).strftime("%H:%M"),
             font=font_hora,
             fill=255,
@@ -319,6 +330,21 @@ while True:
         for stat in stats_rpi:
             draw.text((5 + offset_x, y_pos + offset_y), stat, font=font_texto, fill=255)
             y_pos += 11  # Espaciado perfecto para 4 líneas en la pantalla
+
+    # --- NUEVA PANTALLA: BUS EMT ---
+    elif estado_actual == 8:
+        # Icono Bus (\uf207) y Título
+        draw.text((2 + offset_x, -4 + offset_y), "\uf207", font=font_iconos, fill=255)
+        draw.text(
+            (25 + offset_x, 0 + offset_y), "PARADA 5036", font=font_titulo, fill=255
+        )
+
+        y_text = 18
+        for linea_bus in api_buses:
+            draw.text(
+                (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
+            )
+            y_text += 13  # Separación perfecta para 3 líneas
 
     oled.image(image)
     oled.show()
