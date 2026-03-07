@@ -70,7 +70,7 @@ duracion_actual = 10 # Tiempo dinámico de la diapositiva actual
 offset_x, offset_y = 0, 0
 ultimo_shift = time.time()
 oscuridad_consecutiva = 0
-UMBRAL_OSCURIDAD = 80 
+UMBRAL_OSCURIDAD = 8 
 
 # --- HILO DE INTERNET ---
 def actualizar_internet():
