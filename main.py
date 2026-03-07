@@ -16,14 +16,15 @@ from getDate import obtener_efemeride
 
 # --- INICIALIZAR HARDWARE ---
 spi = busio.SPI(board.SCK, MOSI=board.MOSI)
-cs_pin = digitalio.DigitalInOut(board.D5) 
+cs_pin = digitalio.DigitalInOut(board.D5)
 dc_pin = digitalio.DigitalInOut(board.D23)
 reset_pin = digitalio.DigitalInOut(board.D24)
 oled = adafruit_ssd1306.SSD1306_SPI(128, 64, spi, dc_pin, reset_pin, cs_pin)
 
 try:
     dht_device = adafruit_dht.DHT11(board.D4)
-except: pass
+except:
+    pass
 
 try:
     i2c = board.I2C()
@@ -34,16 +35,18 @@ except:
 # --- CARGA DE FUENTES ---
 # Se han instalado previamente con: sudo apt-get install fonts-dejavu-core -y
 font_path = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-icon_path = "fa-solid-900.ttf" 
+icon_path = "fa-solid-900.ttf"
 
 try:
-    font_titulo = ImageFont.truetype(font_path, 12)  
-    font_datos  = ImageFont.truetype(font_path, 26)  
-    font_hora   = ImageFont.truetype(font_path, 42)  
-    font_texto  = ImageFont.truetype(font_path, 11)
+    font_titulo = ImageFont.truetype(font_path, 12)
+    font_datos = ImageFont.truetype(font_path, 26)
+    font_hora = ImageFont.truetype(font_path, 42)
+    font_texto = ImageFont.truetype(font_path, 11)
     font_iconos = ImageFont.truetype(icon_path, 20)
 except:
-    font_titulo = font_datos = font_hora = font_texto = font_iconos = ImageFont.load_default()
+    font_titulo = font_datos = font_hora = font_texto = font_iconos = (
+        ImageFont.load_default()
+    )
 
 image = Image.new("1", (oled.width, oled.height))
 draw = ImageDraw.Draw(image)
@@ -62,15 +65,16 @@ stats_rpi = ["CPU: --", "RAM: --", "SD: --", "Tmp: --"]
 ultimo_check_sys = 0
 
 # Control de Carrusel
-estado_actual = 0  
+estado_actual = 0
 ultimo_cambio = time.time()
-duracion_actual = 10 # Tiempo dinámico de la diapositiva actual
+duracion_actual = 10  # Tiempo dinámico de la diapositiva actual
 
 # Modo Noche y Anti Burn-in
 offset_x, offset_y = 0, 0
 ultimo_shift = time.time()
 oscuridad_consecutiva = 0
-UMBRAL_OSCURIDAD = 8 
+UMBRAL_OSCURIDAD = 8
+
 
 # --- HILO DE INTERNET ---
 def actualizar_internet():
@@ -79,6 +83,7 @@ def actualizar_internet():
         api_temp_ext, api_pronostico = apis.get_madrid_weather()
         api_fact_lineas = apis.get_fun_fact()
         time.sleep(120)
+
 
 threading.Thread(target=actualizar_internet, daemon=True).start()
 
@@ -102,16 +107,17 @@ while True:
                 oscuridad_consecutiva += 1
             else:
                 oscuridad_consecutiva = 0
-        except: pass
+        except:
+            pass
 
-    if oscuridad_consecutiva > 10: 
+    if oscuridad_consecutiva > 10:
         # Apagado total de la pantalla
         draw.rectangle((0, 0, oled.width, oled.height), outline=0, fill=0)
         oled.image(image)
         oled.show()
-        time.sleep(2.0) # Duerme el procesador 2 segundos enteros
-        ultimo_cambio = time.time() # Resetea el carrusel para cuando despierte
-        continue 
+        time.sleep(2.0)  # Duerme el procesador 2 segundos enteros
+        ultimo_cambio = time.time()  # Resetea el carrusel para cuando despierte
+        continue
 
     # C. LECTURA DHT11
     if (tiempo_actual - ultimo_check_dht) > 3.0:
@@ -121,7 +127,8 @@ while True:
             if t is not None and h is not None:
                 ultima_temp_int = f"{t:.1f}C"
                 ultima_hum_int = f"{h}%"
-        except: pass  
+        except:
+            pass
         ultimo_check_dht = tiempo_actual
 
     # C.2 LECTURA DE ESTADÍSTICAS DEL SISTEMA (Cada 5 segundos)
@@ -130,54 +137,67 @@ while True:
             # CPU Load (Carga media)
             cmd_cpu = "cat /proc/loadavg | awk '{print $1}'"
             cpu = subprocess.check_output(cmd_cpu, shell=True).decode("utf-8").strip()
-            
+
             # RAM Libre vs Usada
             cmd_mem = "free -m | awk 'NR==2{printf \"%s/%sMB\", $3,$2}'"
             mem = subprocess.check_output(cmd_mem, shell=True).decode("utf-8").strip()
-            
+
             # Espacio en Disco (Tarjeta SD)
-            cmd_disk = "df -h | awk '$NF==\"/\"{printf \"%s/%s\", $3,$2}'"
+            cmd_disk = 'df -h | awk \'$NF=="/"{printf "%s/%s", $3,$2}\''
             disk = subprocess.check_output(cmd_disk, shell=True).decode("utf-8").strip()
-            
+
             # Temperatura del procesador
             cmd_temp = "cat /sys/class/thermal/thermal_zone0/temp"
-            temp_raw = subprocess.check_output(cmd_temp, shell=True).decode("utf-8").strip()
+            temp_raw = (
+                subprocess.check_output(cmd_temp, shell=True).decode("utf-8").strip()
+            )
             temp_c = float(temp_raw) / 1000.0
-            
-            stats_rpi = [f"CPU: {cpu}", f"RAM: {mem}", f"SD:  {disk}", f"Tmp: {temp_c:.1f}C"]
+
+            stats_rpi = [
+                f"CPU: {cpu}",
+                f"RAM: {mem}",
+                f"SD:  {disk}",
+                f"Tmp: {temp_c:.1f}C",
+            ]
         except Exception:
-            pass # Si algo falla, mantiene los datos anteriores
+            pass  # Si algo falla, mantiene los datos anteriores
         ultimo_check_sys = tiempo_actual
 
     # D. LÓGICA DEL CARRUSEL E INTELIGENCIA DE ESTADOS
     if (tiempo_actual - ultimo_cambio) > duracion_actual:
         estado_actual += 1
-        
+
         # Configurar tiempos por defecto
-        if estado_actual == 0: duracion_actual = 10 # Madrid
-        elif estado_actual == 1: duracion_actual = 6  # Clima Int
-        elif estado_actual == 2: duracion_actual = 6  # Espectro
-        elif estado_actual == 3: duracion_actual = 10 # Panama
-        elif estado_actual == 4: duracion_actual = 6  # Clima Ext
-        elif estado_actual == 7: duracion_actual = 6
-        
-        elif estado_actual == 5: # Efemérides
+        if estado_actual == 0:
+            duracion_actual = 10  # Madrid
+        elif estado_actual == 1:
+            duracion_actual = 6  # Clima Int
+        elif estado_actual == 2:
+            duracion_actual = 6  # Espectro
+        elif estado_actual == 3:
+            duracion_actual = 10  # Panama
+        elif estado_actual == 4:
+            duracion_actual = 12  # Clima Ext
+        elif estado_actual == 7:
+            duracion_actual = 6
+
+        elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
-                estado_actual = 6 # ¡Saltar directamente al dato curioso!
+                estado_actual = 6  # ¡Saltar directamente al dato curioso!
             else:
                 # Si hay efeméride, le damos 6 segundos para leerla
-                duracion_actual = 6 
+                duracion_actual = 10
 
-        if estado_actual == 6: # Dato Curioso (Paginación Dinámica)
+        if estado_actual == 6:  # Dato Curioso (Paginación Dinámica)
             # Calculamos cuántas páginas de 3 líneas necesitamos
             paginas = (len(api_fact_lineas) // 3) + 1
-            duracion_actual = paginas * 4 # 4 segundos por página
-            
+            duracion_actual = paginas * 5  # 4 segundos por página
+
         if estado_actual > 7:
             estado_actual = 0
             duracion_actual = 10
-            
+
         ultimo_cambio = tiempo_actual
 
     # E. DIBUJAR PANTALLA
@@ -186,69 +206,119 @@ while True:
 
     if estado_actual == 0:
         draw.text((20 + offset_x, 0 + offset_y), "MADRID", font=font_titulo, fill=255)
-        draw.text((2 + offset_x, 18 + offset_y), datetime.now(ZoneInfo("Europe/Madrid")).strftime("%H:%M"), font=font_hora, fill=255)
+        draw.text(
+            (2 + offset_x, 18 + offset_y),
+            datetime.now(ZoneInfo("Europe/Madrid")).strftime("%H:%M"),
+            font=font_hora,
+            fill=255,
+        )
 
     elif estado_actual == 1:
-        draw.text((15 + offset_x, 0 + offset_y), "CLIMA INTERIOR", font=font_titulo, fill=255)
+        draw.text(
+            (15 + offset_x, 0 + offset_y), "CLIMA INTERIOR", font=font_titulo, fill=255
+        )
         draw.text((5 + offset_x, 18 + offset_y), "\uf2c9", font=font_iconos, fill=255)
-        draw.text((30 + offset_x, 18 + offset_y), ultima_temp_int, font=font_datos, fill=255)
+        draw.text(
+            (30 + offset_x, 18 + offset_y), ultima_temp_int, font=font_datos, fill=255
+        )
         draw.text((5 + offset_x, 42 + offset_y), "\uf043", font=font_iconos, fill=255)
-        draw.text((30 + offset_x, 46 + offset_y), ultima_hum_int, font=font_titulo, fill=255)
+        draw.text(
+            (30 + offset_x, 46 + offset_y), ultima_hum_int, font=font_titulo, fill=255
+        )
 
     elif estado_actual == 2:
-        draw.text((5 + offset_x, 0 + offset_y), f"ESPECTRO LUZ {sensor_luz.channel_555nm + sensor_luz.channel_590nm}", font=font_titulo, fill=255)
+        draw.text(
+            (5 + offset_x, 0 + offset_y),
+            f"LUZ {sensor_luz.channel_555nm + sensor_luz.channel_590nm}",
+            font=font_titulo,
+            fill=255,
+        )
         if sensor_luz:
             try:
-                canales = [sensor_luz.channel_415nm, sensor_luz.channel_445nm, sensor_luz.channel_480nm, sensor_luz.channel_515nm, sensor_luz.channel_555nm, sensor_luz.channel_590nm, sensor_luz.channel_630nm, sensor_luz.channel_680nm]
+                canales = [
+                    sensor_luz.channel_415nm,
+                    sensor_luz.channel_445nm,
+                    sensor_luz.channel_480nm,
+                    sensor_luz.channel_515nm,
+                    sensor_luz.channel_555nm,
+                    sensor_luz.channel_590nm,
+                    sensor_luz.channel_630nm,
+                    sensor_luz.channel_680nm,
+                ]
                 max_val = max(canales) if max(canales) > 0 else 1
                 for i, v in enumerate(canales):
-                    draw.rectangle((2 + (i * 16), 64 - int((v / max_val) * 45), 14 + (i * 16), 64), fill=255)
-            except: pass
+                    draw.rectangle(
+                        (2 + (i * 16), 64 - int((v / max_val) * 45), 14 + (i * 16), 64),
+                        fill=255,
+                    )
+            except:
+                pass
 
     elif estado_actual == 3:
         draw.text((18 + offset_x, 0 + offset_y), "PANAMA", font=font_titulo, fill=255)
-        draw.text((2 + offset_x, 18 + offset_y), datetime.now(ZoneInfo("America/Panama")).strftime("%H:%M"), font=font_hora, fill=255)
+        draw.text(
+            (2 + offset_x, 18 + offset_y),
+            datetime.now(ZoneInfo("America/Panama")).strftime("%H:%M"),
+            font=font_hora,
+            fill=255,
+        )
 
     elif estado_actual == 4:
-        draw.text((15 + offset_x, 0 + offset_y), "CLIMA MADRID", font=font_titulo, fill=255)
+        draw.text(
+            (15 + offset_x, 0 + offset_y), "CLIMA MADRID", font=font_titulo, fill=255
+        )
         draw.text((5 + offset_x, 18 + offset_y), "\uf0c2", font=font_iconos, fill=255)
-        draw.text((35 + offset_x, 18 + offset_y), api_temp_ext, font=font_datos, fill=255)
-        draw.text((5 + offset_x, 48 + offset_y), api_pronostico, font=font_titulo, fill=255)
+        draw.text(
+            (35 + offset_x, 18 + offset_y), api_temp_ext, font=font_datos, fill=255
+        )
+        draw.text(
+            (5 + offset_x, 48 + offset_y), api_pronostico, font=font_titulo, fill=255
+        )
 
     elif estado_actual == 5:
-        draw.text((20 + offset_x, 0 + offset_y), "Efemérides", font=font_titulo, fill=255)
+        draw.text(
+            (20 + offset_x, 0 + offset_y), "Efemérides", font=font_titulo, fill=255
+        )
         lineas_efemeride = obtener_efemeride()
         if lineas_efemeride:
             y_text = 20
             # Las efemérides suelen ser cortas, mostramos las primeras 3 líneas
-            for linea in lineas_efemeride[:3]: 
-                draw.text((5 + offset_x, y_text + offset_y), linea, font=font_texto, fill=255)
+            for linea in lineas_efemeride[:3]:
+                draw.text(
+                    (5 + offset_x, y_text + offset_y), linea, font=font_texto, fill=255
+                )
                 y_text += 14
 
     elif estado_actual == 6:
-        draw.text((20 + offset_x, 0 + offset_y), "Fun fact!", font=font_titulo, fill=255)
-        
+        draw.text(
+            (20 + offset_x, 0 + offset_y), "Fun fact!", font=font_titulo, fill=255
+        )
+
         # --- LÓGICA DE PAGINACIÓN ---
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 5) # Cambia de página cada 5s
-        
+        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+
         inicio = pagina_actual * 3
         fin = inicio + 3
-        
+
         y_text = 20
         # Mostramos solo las 3 líneas de la página actual
         for linea in api_fact_lineas[inicio:fin]:
-            draw.text((5 + offset_x, y_text + offset_y), linea, font=font_texto, fill=255)
+            draw.text(
+                (5 + offset_x, y_text + offset_y), linea, font=font_texto, fill=255
+            )
             y_text += 14
-            
+
     elif estado_actual == 7:
-        draw.text((20 + offset_x, 0 + offset_y), "SISTEMA RPI", font=font_titulo, fill=255)
-        
+        draw.text(
+            (20 + offset_x, 0 + offset_y), "SISTEMA RPI", font=font_titulo, fill=255
+        )
+
         # Imprimimos las 4 líneas de estadísticas apiladas (usando la fuente pequeña)
         y_pos = 18
         for stat in stats_rpi:
             draw.text((5 + offset_x, y_pos + offset_y), stat, font=font_texto, fill=255)
-            y_pos += 11 # Espaciado perfecto para 4 líneas en la pantalla
+            y_pos += 11  # Espaciado perfecto para 4 líneas en la pantalla
 
     oled.image(image)
     oled.show()
