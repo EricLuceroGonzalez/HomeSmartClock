@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 CLIENT_ID = os.getenv("EMT_CLIENT_ID")
-PASS_KEY  = os.getenv("EMT_PASS_KEY")
+PASS_KEY = os.getenv("EMT_PASS_KEY")
 
 print("--- DIAGNÓSTICO EMT MADRID ---")
 # Imprimimos solo los primeros 5 caracteres para saber si el .env se lee bien
@@ -14,7 +14,9 @@ if CLIENT_ID and PASS_KEY:
     print(f"✅ Llaves encontradas en .env. Client ID empieza por: {CLIENT_ID[:5]}...")
 else:
     print("❌ ERROR: No se han encontrado las variables en el archivo .env")
-    print("Asegúrate de que el archivo se llama exactamente '.env' y está en esta carpeta.")
+    print(
+        "Asegúrate de que el archivo se llama exactamente '.env' y está en esta carpeta."
+    )
     exit()
 
 print("Conectando con el servidor...")
@@ -24,16 +26,17 @@ headers_login = {"X-ClientId": CLIENT_ID, "passKey": PASS_KEY}
 try:
     res = requests.get(login_url, headers=headers_login, timeout=5)
     datos = res.json()
-    
+
     print("\n--- RESPUESTA DEL SERVIDOR ---")
     print(f"Código HTTP de red: {res.status_code}")
     print(f"Código interno EMT: {datos.get('code')}")
     print(f"Mensaje EMT: {datos.get('description')}")
-    
-    if datos.get("code") == "00":
-        print("\n🎉 ¡ÉXITO! Las credenciales son válidas.")
-    else:
-        print("\n⚠️ FALLO: La EMT ha rechazado la conexión.")
-        
+
+    # Aceptamos "00" (Nuevo login), "01" (Token extendido) y "02" (Token vivo)
+    if datos.get("code") not in ["00", "01", "02"]:
+        print("Error de credenciales")
+
+    token = datos["data"][0]["accessToken"]
+
 except Exception as e:
     print(f"Error de red intentando conectar: {e}")
