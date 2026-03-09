@@ -22,7 +22,7 @@ def get_emt_bus(stop_id="5036"):
         headers_login = {"X-ClientId": CLIENT_ID, "passKey": PASS_KEY}
         res_login = requests.get(login_url, headers=headers_login, timeout=5).json()
 
-        if res_login.get("code") != "00":
+        if res_login.get("code") not in ["00", "01", "02"]:
             return ["Error de", "credenciales"]
 
         token = res_login["data"][0]["accessToken"]
