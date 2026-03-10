@@ -1,6 +1,8 @@
 import os
+import json
 import requests
 from dotenv import load_dotenv
+import EMT_API
 
 # Forzamos la carga del .env
 load_dotenv()
@@ -40,3 +42,20 @@ try:
 
 except Exception as e:
     print(f"Error de red intentando conectar: {e}")
+
+
+def testResponse():
+    # Abrimos el archivo en modo lectura ('r')
+    with open("paradas-EMT.json", "r", encoding="utf-8") as archivo:
+        # Cargamos el contenido directamente a un diccionario
+        datos = json.load(archivo)
+    # Recorremos la lista de paradas
+    print("===" * 10)
+    for parada in datos["paradas_emt_madrid"]:
+        print(f"Parada: {parada['nombre']} (#{parada['codigo']})")
+        busStop = EMT_API.get_emt_bus(parada["codigo"])
+        print(busStop)
+        print("===" * 10)
+
+
+testResponse()

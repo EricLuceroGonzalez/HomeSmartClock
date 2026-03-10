@@ -1,0 +1,40 @@
+{
+  "paradas_emt_madrid": [
+    {
+      "nombre": "Puerta del Sol",
+      "codigo": "1884"
+    },
+    {
+      "nombre": "Intercambiador de Atocha",
+      "codigo": "5705"
+    },
+    {
+      "nombre": "Cibeles",
+      "codigo": "70"
+    },
+    {
+      "nombre": "Plaza de España",
+      "codigo": "1750"
+    },
+    {
+      "nombre": "Intercambiador de Moncloa",
+      "codigo": "2429"
+    },
+    {
+      "nombre": "Castellana - Santiago Bernabéu",
+      "codigo": "41"
+    },
+    {
+      "nombre": "Felipe II (Goya)",
+      "codigo": "5034"
+    },
+    {
+      "nombre": "Delicias",
+      "codigo": "5036"
+    },
+    {
+      "nombre": "Jaime el Conquistador",
+      "codigo": "1932"
+    }
+  ]
+}
