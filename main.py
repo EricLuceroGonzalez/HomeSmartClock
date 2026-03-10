@@ -60,7 +60,8 @@ ultimo_check_dht = 0
 api_temp_ext = "--"
 api_pronostico = "Cargando..."
 api_fact_lineas = ["Buscando", "datos..."]
-api_buses = "Buses EMT"
+parada_delicias = "Buses EMT Delicias"
+parada_JaimeConquistador = "Buses EMT Jaime El Conquistador"
 
 # --- Datos de estadísticas internas del Raspberry Pi ---
 stats_rpi = ["CPU: --", "RAM: --", "SD: --", "Tmp: --"]
@@ -80,11 +81,12 @@ UMBRAL_OSCURIDAD = 50
 
 # --- HILO DE INTERNET ---
 def actualizar_internet():
-    global api_temp_ext, api_pronostico, api_fact_lineas, api_buses
+    global api_temp_ext, api_pronostico, api_fact_lineas, parada_delicias, parada_JaimeConquistador
     ciclo = 0
     while True:
         try:
-            api_buses = EMT_API.get_emt_bus("5036")
+            parada_delicias = EMT_API.get_emt_bus("5036")
+            parada_JaimeConquistador = EMT_API.get_emt_bus("1932")
             if ciclo % 5 == 0:
                 api_temp_ext, api_pronostico = apis.get_madrid_weather()
                 api_fact_lineas = apis.get_fun_fact()
@@ -203,9 +205,11 @@ while True:
         elif estado_actual == 7:
             duracion_actual = 6
         elif estado_actual == 8:  # Buses EMT
-            duracion_actual = 8
+            duracion_actual = 12
+        elif estado_actual == 9:  # Buses EMT
+            duracion_actual = 12
 
-        if estado_actual > 8:
+        if estado_actual > 9:
             estado_actual = 0
             duracion_actual = 10
 
@@ -331,16 +335,31 @@ while True:
             draw.text((5 + offset_x, y_pos + offset_y), stat, font=font_texto, fill=255)
             y_pos += 11  # Espaciado perfecto para 4 líneas en la pantalla
 
-    # --- NUEVA PANTALLA: BUS EMT ---
+    # --- NUEVA PANTALLA: BUS EMT DELICIAS---
     elif estado_actual == 8:
         # Icono Bus (\uf207) y Título
         draw.text((2 + offset_x, -4 + offset_y), "\uf207", font=font_iconos, fill=255)
+        draw.text((25 + offset_x, 0 + offset_y), "Delicias", font=font_titulo, fill=255)
+
+        y_text = 18
+        for linea_bus in parada_delicias:
+            draw.text(
+                (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
+            )
+            y_text += 13  # Separación perfecta para 3 líneas
+    # --- NUEVA PANTALLA: BUS EMT JAIME CONQUISTADOR ---
+    elif estado_actual == 9:
+        # Icono Bus (\uf207) y Título
+        draw.text((2 + offset_x, -4 + offset_y), "\uf207", font=font_iconos, fill=255)
         draw.text(
-            (25 + offset_x, 0 + offset_y), "PARADA 5036", font=font_titulo, fill=255
+            (25 + offset_x, 0 + offset_y),
+            "Jaime Conquistador",
+            font=font_titulo,
+            fill=255,
         )
 
         y_text = 18
-        for linea_bus in api_buses:
+        for linea_bus in parada_JaimeConquistador:
             draw.text(
                 (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
             )
