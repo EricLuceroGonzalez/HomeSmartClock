@@ -70,7 +70,7 @@ ultimo_check_sys = 0
 # Control de Carrusel
 estado_actual = 0
 ultimo_cambio = time.time()
-duracion_actual = 1  # Tiempo dinámico de la diapositiva actual
+duracion_actual = 10  # Tiempo dinámico de la diapositiva actual
 
 # Modo Noche y Anti Burn-in
 offset_x, offset_y = 0, 0
@@ -181,37 +181,38 @@ while True:
 
         # Configurar tiempos por defecto
         if estado_actual == 0:
-            duracion_actual = 1  # Madrid
+            duracion_actual = 6  # Madrid
         elif estado_actual == 1:
             duracion_actual = 6  # Clima Int
         elif estado_actual == 2:
-            duracion_actual = 6  # Espectro
+            duracion_actual = 4  # Espectro
         elif estado_actual == 3:
-            duracion_actual = 1  # Panama
+            duracion_actual = 6  # Panama
         elif estado_actual == 4:
-            duracion_actual = 2  # Clima Ext
+            duracion_actual = 6  # Clima Ext
         elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
-                estado_actual = 6  # ¡Saltar directamente al dato curioso!
+                estado_actual = 4  # ¡Saltar directamente al dato curioso!
             else:
                 # Si hay efeméride, le damos 6 segundos para leerla
-                duracion_actual = 1
+                duracion_actual = 4
 
         if estado_actual == 6:  # Dato Curioso (Paginación Dinámica)
-            # Calculamos cuántas páginas de 3 líneas necesitamos
-            paginas = (len(api_fact_lineas) // 3) + 1
-            duracion_actual = paginas * 5  # 4 segundos por página
+            # Arreglado el bug de las pantallas negras
+            paginas = max(1, (len(api_fact_lineas) + 2) // 3)
+            duracion_actual = paginas * 3  #
         elif estado_actual == 7:
-            duracion_actual = 6
+            duracion_actual = 3
         elif estado_actual == 8:  # Buses EMT
-            duracion_actual = 12
-        elif estado_actual == 9:  # Buses EMT
-            duracion_actual = 12
-
+            paginas = max(1, (len(parada_delicias) + 2) // 3)
+            duracion_actual = paginas * 3
+        elif estado_actual == 9:
+            paginas = (len(parada_JaimeConquistador) // 3) + 1
+            duracion_actual = paginas * 3
         if estado_actual > 9:
             estado_actual = 0
-            duracion_actual = 1
+            duracion_actual = 5
 
         ultimo_cambio = tiempo_actual
 
@@ -311,7 +312,7 @@ while True:
 
         # --- LÓGICA DE PAGINACIÓN ---
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
 
         inicio = pagina_actual * 3
         fin = inicio + 3
@@ -337,12 +338,18 @@ while True:
 
     # --- NUEVA PANTALLA: BUS EMT DELICIAS---
     elif estado_actual == 8:
-        # Icono Bus (\uf207) y Título
         draw.text((2 + offset_x, -4 + offset_y), "\uf207", font=font_iconos, fill=255)
         draw.text((25 + offset_x, 0 + offset_y), "Delicias", font=font_titulo, fill=255)
-
         y_text = 18
-        for linea_bus in parada_delicias:
+
+        segundos_transcurridos = tiempo_actual - ultimo_cambio
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
+
+        inicio = pagina_actual * 3
+        fin = inicio + 3
+
+        # Icono Bus (\uf207) y Título
+        for linea_bus in parada_delicias[inicio:fin]:
             draw.text(
                 (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
             )
@@ -359,7 +366,13 @@ while True:
         )
 
         y_text = 18
-        for linea_bus in parada_JaimeConquistador:
+
+        segundos_transcurridos = tiempo_actual - ultimo_cambio
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
+
+        inicio = pagina_actual * 3
+        fin = inicio + 3
+        for linea_bus in parada_JaimeConquistador[inicio:fin]:
             draw.text(
                 (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
             )
