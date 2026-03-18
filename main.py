@@ -70,7 +70,7 @@ ultimo_check_sys = 0
 # Control de Carrusel
 estado_actual = 0
 ultimo_cambio = time.time()
-duracion_actual = 10  # Tiempo dinámico de la diapositiva actual
+duracion_actual = 1  # Tiempo dinámico de la diapositiva actual
 
 # Modo Noche y Anti Burn-in
 offset_x, offset_y = 0, 0
@@ -181,22 +181,22 @@ while True:
 
         # Configurar tiempos por defecto
         if estado_actual == 0:
-            duracion_actual = 10  # Madrid
+            duracion_actual = 1  # Madrid
         elif estado_actual == 1:
             duracion_actual = 6  # Clima Int
         elif estado_actual == 2:
             duracion_actual = 6  # Espectro
         elif estado_actual == 3:
-            duracion_actual = 10  # Panama
+            duracion_actual = 1  # Panama
         elif estado_actual == 4:
-            duracion_actual = 12  # Clima Ext
+            duracion_actual = 2  # Clima Ext
         elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
                 estado_actual = 6  # ¡Saltar directamente al dato curioso!
             else:
                 # Si hay efeméride, le damos 6 segundos para leerla
-                duracion_actual = 10
+                duracion_actual = 1
 
         if estado_actual == 6:  # Dato Curioso (Paginación Dinámica)
             # Calculamos cuántas páginas de 3 líneas necesitamos
@@ -211,7 +211,7 @@ while True:
 
         if estado_actual > 9:
             estado_actual = 0
-            duracion_actual = 10
+            duracion_actual = 1
 
         ultimo_cambio = tiempo_actual
 

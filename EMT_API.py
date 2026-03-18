@@ -48,8 +48,9 @@ def get_emt_bus(stop_id="5036"):
 
         buses_ordenados = sorted(buses, key=lambda x: x["estimateArrive"])
         resultados = []
+        
 
-        for bus in buses_ordenados[:3]:
+        for bus in buses_ordenados:
             linea = bus["line"]
             minutos = bus["estimateArrive"] // 60
 

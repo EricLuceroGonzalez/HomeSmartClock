@@ -55,6 +55,7 @@ def testResponse():
         print(f"Parada: {parada['nombre']} (#{parada['codigo']})")
         busStop = EMT_API.get_emt_bus(parada["codigo"])
         print(busStop)
+        print(len(busStop))
         print("===" * 10)
 
 
