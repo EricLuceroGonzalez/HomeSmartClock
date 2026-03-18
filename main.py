@@ -181,38 +181,38 @@ while True:
 
         # Configurar tiempos por defecto
         if estado_actual == 0:
-            duracion_actual = 10  # Madrid
+            duracion_actual = 6  # Madrid
         elif estado_actual == 1:
             duracion_actual = 6  # Clima Int
         elif estado_actual == 2:
-            duracion_actual = 6  # Espectro
+            duracion_actual = 4  # Espectro
         elif estado_actual == 3:
-            duracion_actual = 10  # Panama
+            duracion_actual = 6  # Panama
         elif estado_actual == 4:
-            duracion_actual = 12  # Clima Ext
+            duracion_actual = 6  # Clima Ext
         elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
-                estado_actual = 6  # ¡Saltar directamente al dato curioso!
+                estado_actual = 4  # ¡Saltar directamente al dato curioso!
             else:
                 # Si hay efeméride, le damos 6 segundos para leerla
-                duracion_actual = 10
+                duracion_actual = 4
 
         if estado_actual == 6:  # Dato Curioso (Paginación Dinámica)
             # Calculamos cuántas páginas de 3 líneas necesitamos
             paginas = (len(api_fact_lineas) // 3) + 1
-            duracion_actual = paginas * 5  # 4 segundos por página
+            duracion_actual = paginas * 3  # segundos por página
         elif estado_actual == 7:
-            duracion_actual = 6
+            duracion_actual = 3
         elif estado_actual == 8:  # Buses EMT
             paginas = (len(parada_delicias) // 3) + 1
-            duracion_actual = 12
+            duracion_actual = paginas * 3
         elif estado_actual == 9:  # Buses EMT
-            duracion_actual = 12
-
+            paginas = (len(parada_JaimeConquistador) // 3) + 1
+            duracion_actual = paginas * 3
         if estado_actual > 9:
             estado_actual = 0
-            duracion_actual = 10
+            duracion_actual = 5
 
         ultimo_cambio = tiempo_actual
 
@@ -343,7 +343,7 @@ while True:
         y_text = 18
 
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
 
         inicio = pagina_actual * 3
         fin = inicio + 3
@@ -368,7 +368,7 @@ while True:
         y_text = 18
 
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
 
         inicio = pagina_actual * 3
         fin = inicio + 3
