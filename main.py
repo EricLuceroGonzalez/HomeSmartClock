@@ -183,17 +183,17 @@ while True:
         if estado_actual == 0:
             duracion_actual = 6  # Madrid
         elif estado_actual == 1:
-            duracion_actual = 6  # Clima Int
+            duracion_actual = 4  # Clima Int
         elif estado_actual == 2:
-            duracion_actual = 4  # Espectro
+            duracion_actual = 3  # Espectro
         elif estado_actual == 3:
-            duracion_actual = 6  # Panama
+            duracion_actual = 4  # Panama
         elif estado_actual == 4:
-            duracion_actual = 6  # Clima Ext
+            duracion_actual = 3  # Clima Ext
         elif estado_actual == 5:  # Efemérides
             efemeride_hoy = obtener_efemeride()
             if not efemeride_hoy:
-                estado_actual = 4  # ¡Saltar directamente al dato curioso!
+                estado_actual = 6  # ¡Saltar directamente al dato curioso!
             else:
                 # Si hay efeméride, le damos 6 segundos para leerla
                 duracion_actual = 4
@@ -208,7 +208,7 @@ while True:
             paginas = max(1, (len(parada_delicias) + 2) // 3)
             duracion_actual = paginas * 3
         elif estado_actual == 9:
-            paginas = (len(parada_JaimeConquistador) // 3) + 1
+            paginas = max(1, (len(parada_JaimeConquistador) + 2) // 3)
             duracion_actual = paginas * 3
         if estado_actual > 9:
             estado_actual = 0
