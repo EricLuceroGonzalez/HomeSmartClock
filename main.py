@@ -205,6 +205,7 @@ while True:
         elif estado_actual == 7:
             duracion_actual = 6
         elif estado_actual == 8:  # Buses EMT
+            paginas = (len(parada_delicias) // 3) + 1
             duracion_actual = 12
         elif estado_actual == 9:  # Buses EMT
             duracion_actual = 12
@@ -337,12 +338,18 @@ while True:
 
     # --- NUEVA PANTALLA: BUS EMT DELICIAS---
     elif estado_actual == 8:
-        # Icono Bus (\uf207) y Título
         draw.text((2 + offset_x, -4 + offset_y), "\uf207", font=font_iconos, fill=255)
         draw.text((25 + offset_x, 0 + offset_y), "Delicias", font=font_titulo, fill=255)
-
         y_text = 18
-        for linea_bus in parada_delicias:
+
+        segundos_transcurridos = tiempo_actual - ultimo_cambio
+        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+
+        inicio = pagina_actual * 3
+        fin = inicio + 3
+
+        # Icono Bus (\uf207) y Título
+        for linea_bus in parada_delicias[inicio:fin]:
             draw.text(
                 (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
             )
@@ -359,7 +366,13 @@ while True:
         )
 
         y_text = 18
-        for linea_bus in parada_JaimeConquistador:
+
+        segundos_transcurridos = tiempo_actual - ultimo_cambio
+        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+
+        inicio = pagina_actual * 3
+        fin = inicio + 3
+        for linea_bus in parada_JaimeConquistador[inicio:fin]:
             draw.text(
                 (10 + offset_x, y_text + offset_y), linea_bus, font=font_texto, fill=255
             )
