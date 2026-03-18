@@ -199,15 +199,15 @@ while True:
                 duracion_actual = 4
 
         if estado_actual == 6:  # Dato Curioso (Paginación Dinámica)
-            # Calculamos cuántas páginas de 3 líneas necesitamos
-            paginas = (len(api_fact_lineas) // 3) + 1
-            duracion_actual = paginas * 3  # segundos por página
+            # Arreglado el bug de las pantallas negras
+            paginas = max(1, (len(api_fact_lineas) + 2) // 3)
+            duracion_actual = paginas * 3  #
         elif estado_actual == 7:
             duracion_actual = 3
         elif estado_actual == 8:  # Buses EMT
-            paginas = (len(parada_delicias) // 3) + 1
+            paginas = max(1, (len(parada_delicias) + 2) // 3)
             duracion_actual = paginas * 3
-        elif estado_actual == 9:  # Buses EMT
+        elif estado_actual == 9:
             paginas = (len(parada_JaimeConquistador) // 3) + 1
             duracion_actual = paginas * 3
         if estado_actual > 9:
@@ -312,7 +312,7 @@ while True:
 
         # --- LÓGICA DE PAGINACIÓN ---
         segundos_transcurridos = tiempo_actual - ultimo_cambio
-        pagina_actual = int(segundos_transcurridos // 5)  # Cambia de página cada 5s
+        pagina_actual = int(segundos_transcurridos // 3)  # Cambia de página cada 5s
 
         inicio = pagina_actual * 3
         fin = inicio + 3
